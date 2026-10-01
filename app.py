@@ -22,7 +22,41 @@ if "focus_category" not in st.session_state:
 
 active_data = st.session_state.categories
 
-# 4. Empty State (Split-Screen Onboarding)
+PRESET_CATEGORIES = [
+    "Groceries",
+    "Housing & Rent",
+    "Transportation",
+    "Utilities",
+    "Entertainment",
+    "Healthcare",
+    "Savings"
+]
+
+
+def generate_sample_ledger() -> dict[str, Category]:
+    """Generate a sample ledger with realistic categories and transaction records."""
+    food = Category("Groceries")
+    food.deposit(12000, "Monthly Grocery Budget")
+    food.withdraw(2450, "Supermarket Purchase")
+    food.withdraw(680, "Fresh Produce")
+
+    transport = Category("Transportation")
+    transport.deposit(5000, "Commute Allowance")
+    transport.withdraw(1500, "Fuel")
+    transport.withdraw(400, "Transit Pass")
+
+    entertainment = Category("Entertainment")
+    entertainment.deposit(3500, "Discretionary Allocation")
+    entertainment.withdraw(799, "Streaming Subscription")
+
+    return {
+        "Groceries": food,
+        "Transportation": transport,
+        "Entertainment": entertainment
+    }
+
+
+# 4. Onboarding State (Empty Ledger)
 if not active_data:
     st.title("BUDGET TRACKER")
     st.divider()
@@ -35,8 +69,17 @@ if not active_data:
     with col_fresh:
         with st.container(border=True):
             st.subheader("Start Fresh")
-            st.markdown("Create your first budgeting category.")
-            new_cat = st.text_input("Category Name", placeholder="e.g., Groceries").strip()
+            st.markdown("Select a standard category or enter a custom name.")
+            selection = st.selectbox(
+                "Category Selection",
+                options=PRESET_CATEGORIES + ["Custom..."],
+                key="onboard_preset"
+            )
+            if selection == "Custom...":
+                new_cat = st.text_input("Category Name", placeholder="e.g., Subscriptions", key="onboard_custom").strip()
+            else:
+                new_cat = selection
+
             if st.button("Create Category", use_container_width=True):
                 if new_cat:
                     st.session_state.categories[new_cat] = Category(new_cat)
@@ -55,7 +98,17 @@ if not active_data:
                     st.rerun()
                 except Exception as e:
                     st.error(f"Failed to import ledger: {e}")
-                    
+
+    # Secondary Sample Data Prompt
+    with st.container(border=True):
+        col_demo_text, col_demo_btn = st.columns([3, 1])
+        with col_demo_text:
+            st.markdown("**Want to test the dashboard first?** Explore the interface and analytics with a pre-configured sample ledger.")
+        with col_demo_btn:
+            if st.button("Load Sample Data", use_container_width=True):
+                st.session_state.categories = generate_sample_ledger()
+                st.rerun()
+
     st.markdown("<br>", unsafe_allow_html=True)
     
     fc1, fc2, fc3 = st.columns(3)
@@ -220,7 +273,19 @@ with tab_data:
         with st.container(border=True):
             st.subheader("New Category")
             st.markdown("Add a new category to your ledger.")
-            add_cat = st.text_input("Category Name", key="add_cat_input").strip()
+            available_presets = [c for c in PRESET_CATEGORIES if c not in active_data]
+            preset_options = available_presets + ["Custom..."] if available_presets else ["Custom..."]
+            
+            selection = st.selectbox(
+                "Category Selection",
+                options=preset_options,
+                key="manage_preset"
+            )
+            if selection == "Custom...":
+                add_cat = st.text_input("Category Name", placeholder="e.g., Subscriptions", key="manage_custom").strip()
+            else:
+                add_cat = selection
+
             if st.button("Create", use_container_width=True):
                 if add_cat and add_cat not in active_data:
                     st.session_state.categories[add_cat] = Category(add_cat)
@@ -240,22 +305,12 @@ with tab_data:
                     st.rerun()
                     
         with st.container(border=True):
-            st.subheader("Demo Mode")
-            st.markdown("Populate ledger with sample data.")
-            with st.popover("Load Demo Data", use_container_width=True):
-                st.markdown("⚠️ **Warning:** This will overwrite your current ledger.")
-                if st.button("Confirm Load", type="primary", use_container_width=True):
-                    demo_food = Category("Food")
-                    demo_food.deposit(500, "Initial Deposit")
-                    demo_food.withdraw(50, "Groceries")
-                    
-                    demo_transport = Category("Transport")
-                    demo_transport.deposit(200, "Initial Deposit")
-                    
-                    st.session_state.categories = {
-                        "Food": demo_food,
-                        "Transport": demo_transport
-                    }
+            st.subheader("Sample Data")
+            st.markdown("Reset your session with pre-configured categories and transactions.")
+            with st.popover("Load Sample Data", use_container_width=True):
+                st.markdown("⚠️ **Warning:** This will overwrite your current ledger entries.")
+                if st.button("Confirm Overwrite", type="primary", use_container_width=True):
+                    st.session_state.categories = generate_sample_ledger()
                     st.rerun()
                 
     with col_data_right:
