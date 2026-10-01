@@ -1,4 +1,4 @@
-# budget-tracker
+# Budget Tracker
 
 An interactive personal budget tracker and spending dashboard. Built with Python and Streamlit, featuring category-based budgeting, real-time analytics, and portable JSON data persistence.
 
