@@ -1,13 +1,24 @@
-
-# Guided Integration
-docs/
-.agents/
-AGENTS.md
-
-
-docs/
-.agents/
-AGENTS.md
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Streamlit specific
 .streamlit/secrets.toml
+
+# Project documentation & configuration exclusions
+docs/
+.agents/
+AGENTS.md
+
+# Operating System Files
+.DS_Store
+Thumbs.db

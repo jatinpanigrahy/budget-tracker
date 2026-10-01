@@ -1,9 +1,18 @@
 /*
  * Targeted CSS overrides for the Streamlit presentation layer.
- * Global colors and typography are handled natively in .streamlit/config.toml.
+ * Global colors are configured natively in .streamlit/config.toml.
  */
 
-/* Hide the default Streamlit header and footer */
+/* Import modern typography */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+html, body, [class*="css"] {
+    font-family: 'Inter', sans-serif !important;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+}
+
+/* Hide default framework headers and footers */
 header[data-testid="stHeader"] {
     display: none !important;
 }
@@ -12,19 +21,19 @@ footer[data-testid="stFooter"] {
     display: none !important;
 }
 
-/* Hide the element toolbar (e.g., fullscreen buttons on charts) for a cleaner layout */
+/* Hide interactive element toolbars */
 [data-testid="stElementToolbar"] {
     display: none !important;
 }
 
-/* Refine metric value typography for numerical displays */
+/* Adjust metric value typography */
 [data-testid="stMetricValue"] {
     font-size: 2.2rem !important;
     font-weight: 600 !important;
     letter-spacing: -0.02em !important;
 }
 
-/* Refine metric label typography */
+/* Adjust metric label typography */
 [data-testid="stMetricLabel"] {
     font-size: 0.85rem !important;
     text-transform: uppercase !important;

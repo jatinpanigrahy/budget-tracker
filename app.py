@@ -24,59 +24,64 @@ active_data = st.session_state.categories
 
 # 4. Empty State (Split-Screen Onboarding)
 if not active_data:
-    st.title("Budget Tracker")
-    st.markdown("Welcome. Please initialize your ledger to begin.")
+    st.title("BUDGET TRACKER")
     st.divider()
+    
+    st.markdown("Take control of your finances. Create your first category or import an existing ledger to get started.")
+    st.markdown("<br>", unsafe_allow_html=True)
     
     col_fresh, col_import = st.columns(2)
     
     with col_fresh:
-        st.subheader("Start Fresh")
-        st.markdown("Create your first budgeting category.")
-        new_cat = st.text_input("Category Name", placeholder="e.g., Groceries").strip()
-        if st.button("Create Category", use_container_width=True):
-            if new_cat:
-                st.session_state.categories[new_cat] = Category(new_cat)
-                st.session_state.focus_category = new_cat
-                st.rerun()
+        with st.container(border=True):
+            st.subheader("Start Fresh")
+            st.markdown("Create your first budgeting category.")
+            new_cat = st.text_input("Category Name", placeholder="e.g., Groceries").strip()
+            if st.button("Create Category", use_container_width=True):
+                if new_cat:
+                    st.session_state.categories[new_cat] = Category(new_cat)
+                    st.session_state.focus_category = new_cat
+                    st.rerun()
                 
     with col_import:
-        st.subheader("Import Ledger")
-        st.markdown("Upload an existing JSON ledger.")
-        uploaded_file = st.file_uploader("Choose a file", type=["json"], label_visibility="collapsed")
-        if uploaded_file is not None:
-            try:
-                json_string = uploaded_file.getvalue().decode("utf-8")
-                st.session_state.categories = import_ledger(json_string)
-                st.rerun()
-            except Exception as e:
-                st.error(f"Failed to import ledger: {e}")
+        with st.container(border=True):
+            st.subheader("Import Ledger")
+            st.markdown("Upload an existing JSON ledger.")
+            uploaded_file = st.file_uploader("Choose a file", type=["json"], label_visibility="collapsed")
+            if uploaded_file is not None:
+                try:
+                    json_string = uploaded_file.getvalue().decode("utf-8")
+                    st.session_state.categories = import_ledger(json_string)
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Failed to import ledger: {e}")
+                    
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    fc1, fc2, fc3 = st.columns(3)
+    with fc1:
+        with st.container(border=True):
+            st.markdown("### 🔒 Privacy First\n100% local JSON storage. Your financial data never leaves your machine.")
+    with fc2:
+        with st.container(border=True):
+            st.markdown("### 📊 Real-time Insights\nTrack your spending distribution instantly with dynamic analytics.")
+    with fc3:
+        with st.container(border=True):
+            st.markdown("### 💾 Portability\nStateless architecture. Export and backup your ledger anywhere.")
                 
-    st.divider()
-    if st.button("Load Demo Data"):
-        demo_food = Category("Food")
-        demo_food.deposit(500, "Initial Deposit")
-        demo_food.withdraw(50, "Groceries")
-        
-        demo_transport = Category("Transport")
-        demo_transport.deposit(200, "Initial Deposit")
-        
-        st.session_state.categories = {
-            "Food": demo_food,
-            "Transport": demo_transport
-        }
-        st.rerun()
-        
     st.stop()
 
 
 # 5. Main Application (Tabbed Layout)
-st.title("Budget Tracker")
-tab_dashboard, tab_transactions, tab_data = st.tabs(["Dashboard", "Transactions", "Data Management"])
+st.title("BUDGET TRACKER")
+st.divider()
+tab_dashboard, tab_transactions, tab_data = st.tabs(["DASHBOARD", "TRANSACTIONS", "DATA MANAGEMENT"])
 
 
 # --- TAB 1: DASHBOARD ---
 with tab_dashboard:
+    st.button("🔄 Refresh Data")
+    
     active_categories = {name: cat for name, cat in active_data.items() if len(cat.ledger) > 0}
     
     if not active_categories:
@@ -148,7 +153,7 @@ with tab_dashboard:
 
 # --- TAB 2: TRANSACTIONS ---
 with tab_transactions:
-    st.subheader("Log a Transaction")
+    st.subheader("Record Transaction")
     cat_options = list(active_data.keys())
     
     default_index = 0
@@ -209,29 +214,73 @@ with tab_transactions:
 
 # --- TAB 3: DATA MANAGEMENT ---
 with tab_data:
-    st.subheader("Manage Ledger Data")
+    col_data_left, col_data_right = st.columns(2)
     
-    col_down, col_up = st.columns(2)
-    
-    with col_down:
-        st.markdown("### Export")
-        json_data = export_ledger(active_data)
-        st.download_button(
-            label="Download JSON Ledger",
-            data=json_data,
-            file_name="ledger.json",
-            mime="application/json"
-        )
-        
-    with col_up:
-        st.markdown("### Import")
-        uploaded_file = st.file_uploader("Overwrite current ledger", type=["json"])
-        if uploaded_file is not None:
-            if st.button("Confirm Import"):
-                try:
-                    json_string = uploaded_file.getvalue().decode("utf-8")
-                    st.session_state.categories = import_ledger(json_string)
-                    st.toast("Ledger imported successfully.")
+    with col_data_left:
+        with st.container(border=True):
+            st.subheader("New Category")
+            st.markdown("Add a new category to your ledger.")
+            add_cat = st.text_input("Category Name", key="add_cat_input").strip()
+            if st.button("Create", use_container_width=True):
+                if add_cat and add_cat not in active_data:
+                    st.session_state.categories[add_cat] = Category(add_cat)
+                    st.session_state.focus_category = add_cat
+                    st.toast(f"Category '{add_cat}' created.")
                     st.rerun()
-                except Exception as e:
-                    st.error(f"Failed to import ledger: {e}")
+                elif add_cat in active_data:
+                    st.error("Category already exists.")
+                    
+        with st.container(border=True):
+            st.subheader("Factory Reset")
+            st.markdown("Permanently delete all local session data.")
+            with st.popover("Wipe Ledger", use_container_width=True):
+                st.markdown("⚠️ **Are you sure?** This cannot be undone.")
+                if st.button("Confirm Wipe", type="primary", use_container_width=True):
+                    st.session_state.categories = {}
+                    st.rerun()
+                    
+        with st.container(border=True):
+            st.subheader("Demo Mode")
+            st.markdown("Populate ledger with sample data.")
+            with st.popover("Load Demo Data", use_container_width=True):
+                st.markdown("⚠️ **Warning:** This will overwrite your current ledger.")
+                if st.button("Confirm Load", type="primary", use_container_width=True):
+                    demo_food = Category("Food")
+                    demo_food.deposit(500, "Initial Deposit")
+                    demo_food.withdraw(50, "Groceries")
+                    
+                    demo_transport = Category("Transport")
+                    demo_transport.deposit(200, "Initial Deposit")
+                    
+                    st.session_state.categories = {
+                        "Food": demo_food,
+                        "Transport": demo_transport
+                    }
+                    st.rerun()
+                
+    with col_data_right:
+        with st.container(border=True):
+            st.subheader("Export")
+            st.markdown("Save your ledger locally.")
+            json_data = export_ledger(active_data)
+            st.download_button(
+                label="Download JSON",
+                data=json_data,
+                file_name="ledger.json",
+                mime="application/json",
+                use_container_width=True
+            )
+            
+        with st.container(border=True):
+            st.subheader("Import")
+            st.markdown("Overwrite current session with a saved ledger.")
+            uploaded_file = st.file_uploader("Upload JSON file", type=["json"], label_visibility="collapsed")
+            if uploaded_file is not None:
+                if st.button("Confirm Import", use_container_width=True):
+                    try:
+                        json_string = uploaded_file.getvalue().decode("utf-8")
+                        st.session_state.categories = import_ledger(json_string)
+                        st.toast("Ledger imported successfully.")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Failed to import ledger: {e}")
