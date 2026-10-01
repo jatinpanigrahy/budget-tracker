@@ -1,0 +1,33 @@
+/*
+ * Targeted CSS overrides for the Streamlit presentation layer.
+ * Global colors and typography are handled natively in .streamlit/config.toml.
+ */
+
+/* Hide the default Streamlit header and footer */
+header[data-testid="stHeader"] {
+    display: none !important;
+}
+
+footer[data-testid="stFooter"] {
+    display: none !important;
+}
+
+/* Hide the element toolbar (e.g., fullscreen buttons on charts) for a cleaner layout */
+[data-testid="stElementToolbar"] {
+    display: none !important;
+}
+
+/* Refine metric value typography for numerical displays */
+[data-testid="stMetricValue"] {
+    font-size: 2.2rem !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.02em !important;
+}
+
+/* Refine metric label typography */
+[data-testid="stMetricLabel"] {
+    font-size: 0.85rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    opacity: 0.8;
+}
