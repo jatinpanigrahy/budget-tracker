@@ -155,45 +155,56 @@ with tab_transactions:
     if st.session_state.focus_category in cat_options:
         default_index = cat_options.index(st.session_state.focus_category)
         
-    selected_cat = st.selectbox("Source Category", cat_options, index=default_index)
-    action = st.radio("Type", ["Deposit", "Withdraw", "Transfer"], horizontal=True)
-    
-    target_cat = None
-    if action == "Transfer":
-        target_options = [cat for cat in cat_options if cat != selected_cat]
-        if not target_options:
-            st.warning("Requires a second category for transfer.")
-        else:
-            target_cat = st.selectbox("Target Category", target_options)
+    with st.container(border=True):
+        action = st.radio("Transaction Type", ["Deposit", "Withdraw", "Transfer"], horizontal=True)
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            selected_cat = st.selectbox("Source Category", cat_options, index=default_index)
             
-    amount = st.number_input("Amount (₹)", value=1.0, step=100.0, format="%.2f")
-    desc = st.text_input("Description (Optional)") if action in ["Deposit", "Withdraw"] else ""
-    
-    if st.button("Submit"):
-        try:
-            cat_obj = active_data[selected_cat]
-            st.session_state.focus_category = selected_cat
-            
-            if action == "Deposit":
-                cat_obj.deposit(amount, desc)
-                st.success("Deposited.")
-                
-            elif action == "Withdraw":
-                cat_obj.withdraw(amount, desc)
-                st.success("Withdrawn.")
-                
-            elif action == "Transfer":
-                if not target_cat:
-                    st.error("Target missing.")
+            target_cat = None
+            if action == "Transfer":
+                target_options = [cat for cat in cat_options if cat != selected_cat]
+                if not target_options:
+                    st.warning("Requires a second category for transfer.")
                 else:
-                    receiver_obj = active_data[target_cat]
-                    cat_obj.transfer(amount, receiver_obj)
-                    st.success("Transferred.")
+                    target_cat = st.selectbox("Target Category", target_options)
+            else:
+                desc = st.text_input("Description (Optional)")
+                
+        with col2:
+            amount = st.number_input("Amount (₹)", value=1.0, step=100.0, format="%.2f")
+            
+        st.markdown("<br>", unsafe_allow_html=True)
+        submit_col, _ = st.columns([1, 4])
+        with submit_col:
+            submit_btn = st.button("Submit", use_container_width=True)
+            
+        if submit_btn:
+            try:
+                cat_obj = active_data[selected_cat]
+                st.session_state.focus_category = selected_cat
+                
+                if action == "Deposit":
+                    cat_obj.deposit(amount, desc)
+                    st.toast("Deposit successful.")
                     
-        except ValueError as ve:
-            st.error(str(ve))
-        except InsufficientFundsError as ife:
-            st.error(str(ife))
+                elif action == "Withdraw":
+                    cat_obj.withdraw(amount, desc)
+                    st.toast("Withdrawal successful.")
+                    
+                elif action == "Transfer":
+                    if not target_cat:
+                        st.error("Target category is missing.")
+                    else:
+                        receiver_obj = active_data[target_cat]
+                        cat_obj.transfer(amount, receiver_obj)
+                        st.toast("Transfer successful.")
+                        
+            except ValueError as ve:
+                st.error(str(ve))
+            except InsufficientFundsError as ife:
+                st.error(str(ife))
 
 
 # --- TAB 3: DATA MANAGEMENT ---
@@ -220,7 +231,7 @@ with tab_data:
                 try:
                     json_string = uploaded_file.getvalue().decode("utf-8")
                     st.session_state.categories = import_ledger(json_string)
-                    st.success("Ledger imported successfully.")
+                    st.toast("Ledger imported successfully.")
                     st.rerun()
                 except Exception as e:
                     st.error(f"Failed to import ledger: {e}")
