@@ -1,0 +1,13 @@
+
+# Guided Integration
+docs/
+.agents/
+AGENTS.md
+
+
+docs/
+.agents/
+AGENTS.md
+__pycache__/
+*.pyc
+.streamlit/secrets.toml
