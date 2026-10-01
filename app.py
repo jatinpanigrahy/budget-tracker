@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import altair as alt
 from models import Category, InsufficientFundsError
 from utils import import_ledger, export_ledger
 
@@ -103,14 +102,27 @@ with tab_dashboard:
                     amt = entry["amount"]
                     sign = "+" if amt > 0 else "\u2212"
                     audit_trail.append({
+                        "Date": entry.get("timestamp", "N/A")[:10],
                         "Category": name,
                         "Type": "Deposit" if amt > 0 else "Withdrawal",
                         "Amount": f"{sign}\u00a0₹{abs(amt):.2f}",
-                        "Description": entry["description"] if entry["description"] else "N/A",
-                        "Date": entry.get("timestamp", "N/A")[:10]
+                        "Description": entry["description"] if entry["description"] else "N/A"
                     })
             if audit_trail:
-                st.table(audit_trail[::-1])
+                df_log = pd.DataFrame(audit_trail)
+                df_log = df_log.iloc[::-1].reset_index(drop=True)
+                st.dataframe(
+                    df_log,
+                    use_container_width=True,
+                    hide_index=True,
+                    column_config={
+                        "Date": st.column_config.TextColumn("Date", width="small"),
+                        "Category": st.column_config.TextColumn("Category", width="medium"),
+                        "Type": st.column_config.TextColumn("Type", width="small"),
+                        "Amount": st.column_config.TextColumn("Amount", width="small"),
+                        "Description": st.column_config.TextColumn("Description", width="large")
+                    }
+                )
             else:
                 st.info("Log empty.")
                 
@@ -125,15 +137,13 @@ with tab_dashboard:
                     total_spent += spent
                     
             if withdrawal_data and total_spent > 0:
-                pct_data = [{"Category": k, "Percentage": (v / total_spent) * 100} for k, v in withdrawal_data.items()]
-                df_chart = pd.DataFrame(pct_data)
-                chart = alt.Chart(df_chart).mark_bar().encode(
-                    x="Category:N",
-                    y=alt.Y("Percentage:Q", scale=alt.Scale(domain=[0, 100])),
-                    tooltip=["Category", "Percentage:Q"],
-                    color=alt.value("#10b981")
-                ).properties(height=350)
-                st.altair_chart(chart, use_container_width=True)
+                sorted_withdrawals = sorted(withdrawal_data.items(), key=lambda x: x[1], reverse=True)
+                for cat_name, spent in sorted_withdrawals:
+                    percentage = (spent / total_spent) * 100
+                    st.markdown(f"**{cat_name}** — ₹{spent:.2f} ({percentage:.1f}%)")
+                    st.progress(int(percentage))
+            else:
+                st.info("No spending recorded yet.")
 
 
 # --- TAB 2: TRANSACTIONS ---
